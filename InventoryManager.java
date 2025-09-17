@@ -22,12 +22,16 @@ public class InventoryManager {
   public static void main(String[] args) {
     while (true) {
       System.out.println("1. Add Product");
-      System.out.println("2. Exit");
+      System.out.println("2. View Products");
+      System.out.println("3. Search Product");
+      System.out.println("4. Exit");
 
       int choice = Integer.parseInt(scanner.nextLine());
 
       if (choice == 1) {
         addProduct();
+      } else if (choice == 2) {
+        viewProducts();
       } else {
         break;
       }
@@ -51,5 +55,36 @@ public class InventoryManager {
     inventory.put(id, new Product(id, name, price, quantity));
 
     System.out.println("Added");
+  }
+
+  static void viewProducts() {
+
+    if (inventory.isEmpty()) {
+      System.out.println("No products");
+      return;
+    }
+    for (Product p : inventory.values()) {
+      System.out.println(
+          p.id + " " +
+              p.name + " " +
+              p.price + " " +
+              p.quantity);
+    }
+  }
+
+  static void searchProduct() {
+    System.out.print("Enter product id: ");
+    String id = scanner.nextLine();
+    Product p = inventory.get(id);
+
+    if (p == null) {
+      System.out.println("Not found");
+      return;
+    }
+    System.out.println(
+        p.id + " " +
+            p.name + " " +
+            p.price + " " +
+            p.quantity);
   }
 }
