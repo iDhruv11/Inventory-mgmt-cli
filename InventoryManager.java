@@ -26,7 +26,9 @@ public class InventoryManager {
       System.out.println("1. Add Product");
       System.out.println("2. View Products");
       System.out.println("3. Search Product");
-      System.out.println("4. Exit");
+      System.out.println("4. Update Stock");
+      System.out.println("5. Delete Product");
+      System.out.println("6. Exit");
 
       int choice = Integer.parseInt(scanner.nextLine());
 
@@ -34,6 +36,12 @@ public class InventoryManager {
         addProduct();
       } else if (choice == 2) {
         viewProducts();
+        else if(choice == 3) {
+        searchProduct();
+      } else if(choice == 4) {
+        updateStock();
+      } else if(choice == 5) {
+        deleteProduct();
       } else {
         break;
       }
@@ -157,6 +165,47 @@ public class InventoryManager {
 
     if (!found) {
       System.out.println("No results");
+    }
+  }
+
+  static void updateStock() {
+
+    System.out.print("Product ID: ");
+    String id = scanner.nextLine();
+    Product p = inventory.get(id);
+
+    if (p == null) {
+      System.out.println("Not found");
+      return;
+    }
+
+    System.out.println("1. Add");
+    System.out.println("2. Remove");
+
+    int choice = Integer.parseInt(scanner.nextLine());
+    System.out.print("Amount: ");
+    int amount = Integer.parseInt(scanner.nextLine());
+
+    if (choice == 1) {
+      p.quantity += amount;
+      System.out.println("New quantity = " + p.quantity);
+    } else if (choice == 2) {
+
+      p.quantity -= amount;
+      System.out.println("New quantity = " + p.quantity);
+    }
+  }
+
+  static void deleteProduct() {
+
+    System.out.print("Enter product id: ");
+    String id = scanner.nextLine();
+    Product removed = inventory.remove(id);
+
+    if (removed == null) {
+      System.out.println("Product not found");
+    } else {
+      System.out.println("Deleted");
     }
   }
 }
