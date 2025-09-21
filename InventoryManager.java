@@ -1,12 +1,12 @@
 import java.util.*;
 
 class Product {
-  String id;
-  String name;
-  double price;
-  int quantity;
-  String category;
-  int lowStockThreshold;
+  private String id;
+  private String name;
+  private double price;
+  private int quantity;
+  private String category;
+  private int lowStockThreshold;
 
   Product(String id, String name, double price, int quantity, String category, int lowStock) {
     this.id = id;
@@ -15,6 +15,34 @@ class Product {
     this.quantity = quantity;
     this.category = category;
     this.lowStockThreshold = lowStock;
+  }
+
+  String getId() {
+    return id;
+  }
+
+  String getName() {
+    return name;
+  }
+
+  String getCategory() {
+    return category;
+  }
+
+  double getPrice() {
+    return price;
+  }
+
+  int getQuantity() {
+    return quantity;
+  }
+
+  int getLowStockThreshold() {
+    return lowStockThreshold;
+  }
+
+  double getTotalValue() {
+    return price * quantity;
   }
 }
 
@@ -89,11 +117,12 @@ public class InventoryManager {
     }
     for (Product p : inventory.values()) {
       System.out.println(
-        p.id + " | " +
-        p.name + " | " +
-        p.category + " | " +
-        p.price + " | " +
-        p.quantity
+        p.getId() + " | " +
+        p.getName() + " | " +
+        p.getCategory() + " | " +
+        p.getPrice() + " | " +
+        p.getQuantity() + " | " +
+        p.getTotalValue()
       )
     }
   }
@@ -126,11 +155,11 @@ public class InventoryManager {
     }
 
     System.out.println(
-        p.id + " | " +
-            p.name + " | " +
-            p.category + " | " +
-            p.price + " | " +
-            p.quantity);
+        p.getId() + " | " +
+            p.getName() + " | " +
+            p.getCategory() + " | " +
+            p.getPrice() + " | " +
+            p.getQuantity());
   }
 
   static void searchByName() {
@@ -139,15 +168,15 @@ public class InventoryManager {
     boolean found = false;
 
     for (Product p : inventory.values()) {
-      if (p.name.toLowerCase()
+      if (p.getName().toLowerCase()
           .contains(search.toLowerCase())) {
         found = true;
         System.out.println(
-            p.id + " | " +
-                p.name + " | " +
-                p.category + " | " +
-                p.price + " | " +
-                p.quantity);
+            p.getId() + " | " +
+                p.getName() + " | " +
+                p.getCategory() + " | " +
+                p.getPrice() + " | " +
+                p.getQuantity());
       }
     }
 
@@ -161,16 +190,16 @@ public class InventoryManager {
     String search = scanner.nextLine();
     boolean found = false;
     for (Product p : inventory.values()) {
-      if (p.category.toLowerCase()
+      if (p.getCategory().toLowerCase()
           .contains(search.toLowerCase())) {
         found = true;
 
         System.out.println(
-            p.id + " | " +
-                p.name + " | " +
-                p.category + " | " +
-                p.price + " | " +
-                p.quantity);
+            p.getId() + " | " +
+                p.getName() + " | " +
+                p.getCategory() + " | " +
+                p.getPrice() + " | " +
+                p.getQuantity());
       }
     }
 
@@ -198,20 +227,19 @@ public class InventoryManager {
     int amount = Integer.parseInt(scanner.nextLine());
 
     if (choice == 1) {
-      p.quantity += amount;
-      System.out.println("New quantity = " + p.quantity);
+      p.addStock(amount);
+      System.out.println("New quantity = " + p.getQuantity());
     } else if (choice == 2) {
 
-      if (amount > p.quantity) {
+      if (!p.removeStock(amount)) {
         System.out.println("Not enough stock");
         return;
       }
-      p.quantity -= amount;
 
-      if (p.quantity <= p.lowStockThreshold) {
+      if (p.isLowStock) {
         System.out.println("LOW STOCK WARNING");
       }
-      System.out.println("New quantity = " + p.quantity);
+      System.out.println("New quantity = " + p.getQuantity());
     }
   }
 
@@ -236,9 +264,9 @@ public class InventoryManager {
     int lowStock = 0;
 
     for (Product p : inventory.values()) {
-      totalQuantity += p.quantity;
-      totalValue += p.price * p.quantity;
-      if (p.quantity <= p.lowStockThreshold) {
+      totalQuantity += p.getQuantity();
+      totalValue += p.getTotalValue();
+      if (p.isLowStock) {
         lowStock++;
       }
     }
@@ -255,12 +283,12 @@ public class InventoryManager {
       PrintWriter writer = new PrintWriter(FILE_NAME);
       for (Product p : inventory.values()) {
         writer.println(
-          p.id + "," +
-          p.name + "," +
-          p.category + "," +
-          p.price + "," +
-          p.quantity + "," +
-          p.lowStockThreshold)
+          p.getId() + "," +
+          p.getName() + "," +
+          p.getCategory() + "," +
+          p.getPrice() + "," +
+          p.getQuantity() + "," +
+          p.getLowStockThreshold())
       }
       writer.close();
       System.out.println("Inventory saved");
@@ -291,7 +319,7 @@ public class InventoryManager {
           Double.parseDouble(parts[3]),
           Integer.parseInt(parts[4]),
           Integer.parseInt(parts[5]))
-        inventory.put(p.id, p);
+        inventory.put(p.getId(), p);
       }
 
       fileScanner.close();
@@ -300,5 +328,21 @@ public class InventoryManager {
     } catch (Exception e) {
       System.out.println("Load failed");
     }
+  }
+
+  void addStock(int amount) {
+    quantity += amount;
+  }
+
+  boolean removeStock(int amount) {
+    if (amount > quantity) {
+      return false;
+    }
+    quantity -= amount;
+    return true;
+  }
+
+  boolean isLowStock() {
+    return quantity <= lowStockThreshold;
   }
 }
