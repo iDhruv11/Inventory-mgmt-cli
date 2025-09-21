@@ -1,10 +1,12 @@
 import java.util.*;
+import java.time.LocalDateTime;
 
 class Product {
   private String id;
   private String name;
   private double price;
   private int quantity;
+  private LocalDateTime lastUpdated;
   private String category;
   private int lowStockThreshold;
 
@@ -15,6 +17,7 @@ class Product {
     this.quantity = quantity;
     this.category = category;
     this.lowStockThreshold = lowStock;
+    this.lastUpdated = LocalDateTime.now();
   }
 
   String getId() {
@@ -44,6 +47,32 @@ class Product {
   double getTotalValue() {
     return price * quantity;
   }
+
+  LocalDateTime getLastUpdated() {
+    return lastUpdated;
+  }
+
+  void setName(String name) {
+    this.name = name;
+  }
+
+  void setCategory(String category) {
+    this.category = category;
+  }
+
+  void setPrice(double price) {
+    this.price = price;
+  }
+
+  @Override
+  public String toString() {
+    return id + " | " +
+        name + " | " +
+        category + " | " +
+        price + " | " +
+        quantity + " | " +
+        getTotalValue();
+  }
 }
 
 public class InventoryManager {
@@ -61,7 +90,8 @@ public class InventoryManager {
       System.out.println("4. Update Stock");
       System.out.println("5. Delete Product");
       System.out.println("6. Inventory Report");
-      System.out.println("7. Exit");
+      System.out.println("7. Update Product");
+      System.out.println("8. Exit");
 
       int choice = Integer.parseInt(scanner.nextLine());
 
@@ -116,14 +146,7 @@ public class InventoryManager {
       return;
     }
     for (Product p : inventory.values()) {
-      System.out.println(
-        p.getId() + " | " +
-        p.getName() + " | " +
-        p.getCategory() + " | " +
-        p.getPrice() + " | " +
-        p.getQuantity() + " | " +
-        p.getTotalValue()
-      )
+      System.out.println(p);
     }
   }
 
@@ -153,13 +176,7 @@ public class InventoryManager {
       System.out.println("Not found");
       return;
     }
-
-    System.out.println(
-        p.getId() + " | " +
-            p.getName() + " | " +
-            p.getCategory() + " | " +
-            p.getPrice() + " | " +
-            p.getQuantity());
+    System.out.println(p);
   }
 
   static void searchByName() {
@@ -171,12 +188,7 @@ public class InventoryManager {
       if (p.getName().toLowerCase()
           .contains(search.toLowerCase())) {
         found = true;
-        System.out.println(
-            p.getId() + " | " +
-                p.getName() + " | " +
-                p.getCategory() + " | " +
-                p.getPrice() + " | " +
-                p.getQuantity());
+        System.out.println(p);
       }
     }
 
@@ -193,13 +205,7 @@ public class InventoryManager {
       if (p.getCategory().toLowerCase()
           .contains(search.toLowerCase())) {
         found = true;
-
-        System.out.println(
-            p.getId() + " | " +
-                p.getName() + " | " +
-                p.getCategory() + " | " +
-                p.getPrice() + " | " +
-                p.getQuantity());
+        System.out.println(p);
       }
     }
 
@@ -332,6 +338,7 @@ public class InventoryManager {
 
   void addStock(int amount) {
     quantity += amount;
+    lastUpdated = LocalDateTime.now();
   }
 
   boolean removeStock(int amount) {
@@ -339,10 +346,37 @@ public class InventoryManager {
       return false;
     }
     quantity -= amount;
+    lastUpdated = LocalDateTime.now();
     return true;
   }
 
   boolean isLowStock() {
     return quantity <= lowStockThreshold;
+  }
+
+  static void updateProduct() {
+
+    System.out.print("Product ID: ");
+    String id = scanner.nextLine();
+    Product p = inventory.get(id);
+    if (p == null) {
+      System.out.println("Not found");
+      return;
+    }
+    System.out.println("1. Name");
+    System.out.println("2. Category");
+    System.out.println("3. Price");
+
+    int choice = Integer.parseInt(scanner.nextLine());
+    if (choice == 1) {
+      System.out.print("New name: ");
+      p.name = scanner.nextLine();
+    } else if (choice == 2) {
+      System.out.print("New category: ");
+      p.category = scanner.nextLine();
+    } else if (choice == 3) {
+      System.out.print("New price: ");
+      p.price = Double.parseDouble(scanner.nextLine());
+    }
   }
 }
