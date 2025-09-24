@@ -93,7 +93,7 @@ public class InventoryManager {
       System.out.println("7. Update Product");
       System.out.println("8. Exit");
 
-      int choice = Integer.parseInt(scanner.nextLine());
+      int choice = getIntInput();
 
       if (choice == 1) {
         addProduct();
@@ -126,10 +126,10 @@ public class InventoryManager {
     String name = scanner.nextLine();
 
     System.out.print("Price: ");
-    double price = Double.parseDouble(scanner.nextLine());
+    double price = getDoubleInput();
 
     System.out.print("Quantity: ");
-    int quantity = Integer.parseInt(scanner.nextLine());
+    int quantity = getIntInput();
 
     System.out.print("Low stock threshold: ");
     int threshold = Integer.parseInt(scanner.nextLine());
@@ -146,7 +146,7 @@ public class InventoryManager {
       return;
     }
     for (Product p : inventory.values()) {
-      System.out.println(p);
+      printProduct(p);
     }
   }
 
@@ -156,7 +156,7 @@ public class InventoryManager {
     System.out.println("2. Search by Name");
     System.out.println("3. Search by Category");
 
-    int choice = Integer.parseInt(scanner.nextLine());
+    int choice = getIntInput();
 
     if (choice == 1) {
       searchById();
@@ -176,7 +176,7 @@ public class InventoryManager {
       System.out.println("Not found");
       return;
     }
-    System.out.println(p);
+    printProduct(p);
   }
 
   static void searchByName() {
@@ -188,7 +188,7 @@ public class InventoryManager {
       if (p.getName().toLowerCase()
           .contains(search.toLowerCase())) {
         found = true;
-        System.out.println(p);
+        printProduct(p);
       }
     }
 
@@ -205,7 +205,7 @@ public class InventoryManager {
       if (p.getCategory().toLowerCase()
           .contains(search.toLowerCase())) {
         found = true;
-        System.out.println(p);
+        printProduct(p);
       }
     }
 
@@ -228,9 +228,9 @@ public class InventoryManager {
     System.out.println("1. Add");
     System.out.println("2. Remove");
 
-    int choice = Integer.parseInt(scanner.nextLine());
+    int choice = getIntInput();
     System.out.print("Amount: ");
-    int amount = Integer.parseInt(scanner.nextLine());
+    int amount = getIntInput();
 
     if (choice == 1) {
       p.addStock(amount);
@@ -268,12 +268,19 @@ public class InventoryManager {
     int totalQuantity = 0;
     double totalValue = 0;
     int lowStock = 0;
+    Map<String, Integer> categories = new HashMap<>();
 
     for (Product p : inventory.values()) {
       totalQuantity += p.getQuantity();
       totalValue += p.getTotalValue();
       if (p.isLowStock) {
         lowStock++;
+      }
+      String category = p.getCategory();
+      categories.put(category, categories.getOrDefault(category, 0) + 1);
+      System.out.println("\nProducts By Category");
+      for (Map.Entry<String, Integer> entry : categories.entrySet()) {
+        System.out.println(entry.getKey() + " : " + entry.getValue());
       }
     }
 
@@ -367,7 +374,7 @@ public class InventoryManager {
     System.out.println("2. Category");
     System.out.println("3. Price");
 
-    int choice = Integer.parseInt(scanner.nextLine());
+    int choice = getIntInput();
     if (choice == 1) {
       System.out.print("New name: ");
       p.name = scanner.nextLine();
@@ -376,7 +383,31 @@ public class InventoryManager {
       p.category = scanner.nextLine();
     } else if (choice == 3) {
       System.out.print("New price: ");
-      p.price = Double.parseDouble(scanner.nextLine());
+      p.price = getDoubleInput();
+    }
+  }
+
+  static void printProduct(Product p) {
+    System.out.println(p);
+  }
+
+  static int getIntInput() {
+    while (true) {
+      try {
+        return getIntInput();
+      } catch (Exception e) {
+        System.out.println("Enter a valid number");
+      }
+    }
+  }
+
+  static double getDoubleInput() {
+    while (true) {
+      try {
+        return getDoubleInput();
+      } catch (Exception e) {
+        System.out.println("Enter a valid number");
+      }
     }
   }
 }
