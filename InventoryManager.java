@@ -1,5 +1,6 @@
 import java.util.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 class Product {
   private String id;
@@ -54,14 +55,18 @@ class Product {
 
   void setName(String name) {
     this.name = name;
+    this.lastUpdated = LocalDateTime.now();
   }
 
   void setCategory(String category) {
     this.category = category;
+    this.lastUpdated = LocalDateTime.now();
   }
 
   void setPrice(double price) {
     this.price = price;
+    this.lastUpdated = LocalDateTime.now();
+
   }
 
   @Override
@@ -88,10 +93,12 @@ public class InventoryManager {
       System.out.println("2. View Products");
       System.out.println("3. Search Product");
       System.out.println("4. Update Stock");
-      System.out.println("5. Delete Product");
-      System.out.println("6. Inventory Report");
-      System.out.println("7. Update Product");
-      System.out.println("8. Exit");
+      System.out.println("5. Low Stock Threshold");
+      System.out.println("6. Delete Product");
+      System.out.println("7. Inventory Report");
+      System.out.println("8. Update Product");
+      System.out.println("9. Low Stock Items");
+      System.out.println("10. Exit");
 
       int choice = getIntInput();
 
@@ -104,9 +111,15 @@ public class InventoryManager {
       } else if(choice == 4) {
         updateStock();
       } else if(choice == 5) {
-        deleteProduct();
+        setLowStockThreshold();
       } else if(choice == 6) {
+        deleteProduct();
+      } else if(choice == 7) {
         showReport();
+      } else if(choice == 8) {
+        updateProduct();
+      } else if(choice == 9) {
+        showLowStockItems();
       } else{
         saveInventory();
         break;
@@ -117,7 +130,7 @@ public class InventoryManager {
   static void addProduct() {
 
     System.out.print("ID: ");
-    String id = scanner.nextLine();
+    String id = scanner.nextLine.trim().toUpperCase();
 
     System.out.print("Category: ");
     String category = scanner.nextLine();
@@ -134,8 +147,14 @@ public class InventoryManager {
     System.out.print("Low stock threshold: ");
     int threshold = Integer.parseInt(scanner.nextLine());
 
+    if (inventory.containsKey(id)) {
+      System.out.println("Product already exists");
+      return;
+    }
+    if (product.isLowStock()) {
+      System.out.println("Product is already below threshold");
+    }
     inventory.put(id, new Product(id, name, price, quantity, category, threshold));
-
     System.out.println("Added");
   }
 
@@ -145,7 +164,10 @@ public class InventoryManager {
       System.out.println("No products");
       return;
     }
-    for (Product p : inventory.values()) {
+    List<Product> products = new ArrayList<>(inventory.values());
+
+    products.sort((a, b) -> a.getId().compareTo(b.getId()));
+    for (Product p : products) {
       printProduct(p);
     }
   }
@@ -170,7 +192,7 @@ public class InventoryManager {
   static void searchById() {
 
     System.out.print("ID: ");
-    String id = scanner.nextLine();
+    String id = scanner.nextLine.trim().toUpperCase();
     Product p = inventory.get(id);
     if (p == null) {
       System.out.println("Not found");
@@ -217,7 +239,7 @@ public class InventoryManager {
   static void updateStock() {
 
     System.out.print("Product ID: ");
-    String id = scanner.nextLine();
+    String id = scanner.nextLine.trim().toUpperCase();
     Product p = inventory.get(id);
 
     if (p == null) {
@@ -252,7 +274,7 @@ public class InventoryManager {
   static void deleteProduct() {
 
     System.out.print("Enter product id: ");
-    String id = scanner.nextLine();
+    String id = scanner.nextLine.trim().toUpperCase();
     Product removed = inventory.remove(id);
 
     if (removed == null) {
@@ -292,16 +314,19 @@ public class InventoryManager {
 
   static void saveInventory() {
 
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     try {
       PrintWriter writer = new PrintWriter(FILE_NAME);
       for (Product p : inventory.values()) {
         writer.println(
-          p.getId() + "," +
-          p.getName() + "," +
-          p.getCategory() + "," +
-          p.getPrice() + "," +
-          p.getQuantity() + "," +
-          p.getLowStockThreshold())
+            p.getId() + "|" +
+                p.getName() + "|" +
+                p.getCategory() + "|" +
+                p.getPrice() + "|" +
+                p.getQuantity() + "|" +
+                p.getLowStockThreshold() + "|" +
+                p.getLastUpdated()
+                    .format(formatter));
       }
       writer.close();
       System.out.println("Inventory saved");
@@ -320,8 +345,8 @@ public class InventoryManager {
       Scanner fileScanner = new Scanner(file);
       while (fileScanner.hasNextLine()) {
         String line = fileScanner.nextLine();
-        String[] parts = line.split(",");
-        if (parts.length != 6) {
+        String[] parts = line.split("\\|");
+        if (parts.length < 6) {
           continue;
         }
 
@@ -336,8 +361,10 @@ public class InventoryManager {
       }
 
       fileScanner.close();
-      System.out.println("Loaded inventory");
+      System.out.println( "Loaded " + inventory.size() + " products");
 
+    } catch(NumberFormatException e){
+      System.out.println( "Skipping bad record");
     } catch (Exception e) {
       System.out.println("Load failed");
     }
@@ -364,12 +391,14 @@ public class InventoryManager {
   static void updateProduct() {
 
     System.out.print("Product ID: ");
-    String id = scanner.nextLine();
+    String id = scanner.nextLine.trim().toUpperCase();
     Product p = inventory.get(id);
     if (p == null) {
       System.out.println("Not found");
       return;
     }
+    System.out.println("Current Product:");
+    printProduct(product);
     System.out.println("1. Name");
     System.out.println("2. Category");
     System.out.println("3. Price");
@@ -377,13 +406,13 @@ public class InventoryManager {
     int choice = getIntInput();
     if (choice == 1) {
       System.out.print("New name: ");
-      p.name = scanner.nextLine();
+      p.setName(scanner.nextLine());
     } else if (choice == 2) {
       System.out.print("New category: ");
-      p.category = scanner.nextLine();
+      p.setCategory(scanner.nextLine());
     } else if (choice == 3) {
       System.out.print("New price: ");
-      p.price = getDoubleInput();
+      p.setPrice(getDoubleInput());
     }
   }
 
@@ -409,5 +438,28 @@ public class InventoryManager {
         System.out.println("Enter a valid number");
       }
     }
+  }
+
+  static void showLowStockItems() {
+    List<Product> lowStock = new ArrayList<>();
+    for (Product p : inventory.values()) {
+      if (p.isLowStock()) {
+        lowStock.add(p);
+      }
+    }
+    if (lowStock.isEmpty()) {
+      System.out.println("No low stock items");
+      return;
+    }
+    System.out.println("LOW STOCK ALERT");
+    System.out.println("Items below threshold: " + lowStock.size());
+    for (Product p : lowstock.values()) {
+      printProduct(p);
+    }
+  }
+
+  void setLowStockThreshold(int threshold) {
+    this.lowStockThreshold = threshold;
+    this.lastUpdated = LocalDateTime.now();
   }
 }
