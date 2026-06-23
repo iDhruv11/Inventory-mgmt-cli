@@ -1,6 +1,7 @@
 import java.util.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.io.*;
 
 class Product {
   private String id;
@@ -18,6 +19,29 @@ class Product {
     this.quantity = quantity;
     this.category = category;
     this.lowStockThreshold = lowStock;
+    this.lastUpdated = LocalDateTime.now();
+  }
+
+  void addStock(int amount) {
+    this.quantity += amount;
+    this.lastUpdated = LocalDateTime.now();
+  }
+
+  boolean removeStock(int amount) {
+    if (amount > this.quantity) {
+      return false;
+    }
+    this.quantity -= amount;
+    this.lastUpdated = LocalDateTime.now();
+    return true;
+  }
+
+  boolean isLowStock() {
+    return quantity <= lowStockThreshold;
+  }
+
+  void setLowStockThreshold(int threshold) {
+    this.lowStockThreshold = threshold;
     this.lastUpdated = LocalDateTime.now();
   }
 
@@ -106,23 +130,25 @@ public class InventoryManager {
         addProduct();
       } else if (choice == 2) {
         viewProducts();
-        else if(choice == 3) {
+      } else if (choice == 3) {
         searchProduct();
-      } else if(choice == 4) {
+      } else if (choice == 4) {
         updateStock();
-      } else if(choice == 5) {
-        setLowStockThreshold();
-      } else if(choice == 6) {
+      } else if (choice == 5) {
+        updateThreshold();
+      } else if (choice == 6) {
         deleteProduct();
-      } else if(choice == 7) {
+      } else if (choice == 7) {
         showReport();
-      } else if(choice == 8) {
+      } else if (choice == 8) {
         updateProduct();
-      } else if(choice == 9) {
+      } else if (choice == 9) {
         showLowStockItems();
-      } else{
+      } else if (choice == 10) {
         saveInventory();
         break;
+      } else {
+        System.out.println("Invalid choice");
       }
     }
   }
@@ -130,7 +156,7 @@ public class InventoryManager {
   static void addProduct() {
 
     System.out.print("ID: ");
-    String id = scanner.nextLine.trim().toUpperCase();
+    String id = scanner.nextLine().trim().toUpperCase();
 
     System.out.print("Category: ");
     String category = scanner.nextLine();
@@ -151,7 +177,7 @@ public class InventoryManager {
       System.out.println("Product already exists");
       return;
     }
-    if (product.isLowStock()) {
+    if (quantity <= threshold) {
       System.out.println("Product is already below threshold");
     }
     inventory.put(id, new Product(id, name, price, quantity, category, threshold));
@@ -192,7 +218,7 @@ public class InventoryManager {
   static void searchById() {
 
     System.out.print("ID: ");
-    String id = scanner.nextLine.trim().toUpperCase();
+    String id = scanner.nextLine().trim().toUpperCase();
     Product p = inventory.get(id);
     if (p == null) {
       System.out.println("Not found");
@@ -239,7 +265,7 @@ public class InventoryManager {
   static void updateStock() {
 
     System.out.print("Product ID: ");
-    String id = scanner.nextLine.trim().toUpperCase();
+    String id = scanner.nextLine().trim().toUpperCase();
     Product p = inventory.get(id);
 
     if (p == null) {
@@ -264,7 +290,7 @@ public class InventoryManager {
         return;
       }
 
-      if (p.isLowStock) {
+      if (p.isLowStock()) {
         System.out.println("LOW STOCK WARNING");
       }
       System.out.println("New quantity = " + p.getQuantity());
@@ -274,7 +300,7 @@ public class InventoryManager {
   static void deleteProduct() {
 
     System.out.print("Enter product id: ");
-    String id = scanner.nextLine.trim().toUpperCase();
+    String id = scanner.nextLine().trim().toUpperCase();
     Product removed = inventory.remove(id);
 
     if (removed == null) {
@@ -292,18 +318,18 @@ public class InventoryManager {
     int lowStock = 0;
     Map<String, Integer> categories = new HashMap<>();
 
+    System.out.println("\nProducts By Category");
     for (Product p : inventory.values()) {
       totalQuantity += p.getQuantity();
       totalValue += p.getTotalValue();
-      if (p.isLowStock) {
+      if (p.isLowStock()) {
         lowStock++;
       }
       String category = p.getCategory();
       categories.put(category, categories.getOrDefault(category, 0) + 1);
-      System.out.println("\nProducts By Category");
-      for (Map.Entry<String, Integer> entry : categories.entrySet()) {
-        System.out.println(entry.getKey() + " : " + entry.getValue());
-      }
+    }
+    for (Map.Entry<String, Integer> entry : categories.entrySet()) {
+      System.out.println(entry.getKey() + " : " + entry.getValue());
     }
 
     System.out.println("Products: " + totalProducts);
@@ -344,61 +370,46 @@ public class InventoryManager {
       }
       Scanner fileScanner = new Scanner(file);
       while (fileScanner.hasNextLine()) {
-        String line = fileScanner.nextLine();
-        String[] parts = line.split("\\|");
-        if (parts.length < 6) {
-          continue;
-        }
+        try {
+          String line = fileScanner.nextLine();
+          String[] parts = line.split("\\|");
+          if (parts.length < 6) {
+            continue;
+          }
 
-        Product p = new Product(
-          parts[0],
-          parts[1],
-          parts[2],
-          Double.parseDouble(parts[3]),
-          Integer.parseInt(parts[4]),
-          Integer.parseInt(parts[5]))
-        inventory.put(p.getId(), p);
+          Product p = new Product(
+              parts[0],
+              parts[1],
+              Double.parseDouble(parts[3]),
+              Integer.parseInt(parts[4]),
+              parts[2],
+              Integer.parseInt(parts[5]));
+          inventory.put(p.getId(), p);
+
+        } catch (NumberFormatException e) {
+          System.out.println("Skipping Bad Record");
+        }
       }
 
       fileScanner.close();
-      System.out.println( "Loaded " + inventory.size() + " products");
+      System.out.println("Loaded " + inventory.size() + " products");
 
-    } catch(NumberFormatException e){
-      System.out.println( "Skipping bad record");
     } catch (Exception e) {
       System.out.println("Load failed");
     }
   }
 
-  void addStock(int amount) {
-    quantity += amount;
-    lastUpdated = LocalDateTime.now();
-  }
-
-  boolean removeStock(int amount) {
-    if (amount > quantity) {
-      return false;
-    }
-    quantity -= amount;
-    lastUpdated = LocalDateTime.now();
-    return true;
-  }
-
-  boolean isLowStock() {
-    return quantity <= lowStockThreshold;
-  }
-
   static void updateProduct() {
 
     System.out.print("Product ID: ");
-    String id = scanner.nextLine.trim().toUpperCase();
+    String id = scanner.nextLine().trim().toUpperCase();
     Product p = inventory.get(id);
     if (p == null) {
       System.out.println("Not found");
       return;
     }
     System.out.println("Current Product:");
-    printProduct(product);
+    printProduct(p);
     System.out.println("1. Name");
     System.out.println("2. Category");
     System.out.println("3. Price");
@@ -423,7 +434,7 @@ public class InventoryManager {
   static int getIntInput() {
     while (true) {
       try {
-        return getIntInput();
+        return Integer.parseInt(scanner.nextLine());
       } catch (Exception e) {
         System.out.println("Enter a valid number");
       }
@@ -433,7 +444,7 @@ public class InventoryManager {
   static double getDoubleInput() {
     while (true) {
       try {
-        return getDoubleInput();
+        return Double.parseDouble(scanner.nextLine());
       } catch (Exception e) {
         System.out.println("Enter a valid number");
       }
@@ -453,13 +464,28 @@ public class InventoryManager {
     }
     System.out.println("LOW STOCK ALERT");
     System.out.println("Items below threshold: " + lowStock.size());
-    for (Product p : lowstock.values()) {
+    for (Product p : lowStock) {
       printProduct(p);
     }
   }
 
-  void setLowStockThreshold(int threshold) {
-    this.lowStockThreshold = threshold;
-    this.lastUpdated = LocalDateTime.now();
+  static void updateThreshold() {
+    System.out.print("Product ID: ");
+    String id = scanner.nextLine()
+        .trim()
+        .toUpperCase();
+
+    Product p = inventory.get(id);
+    if (p == null) {
+      System.out.println("Product not found");
+      return;
+    }
+
+    System.out.println("Current threshold: " + p.getLowStockThreshold());
+    System.out.print("New threshold: ");
+    int threshold = getIntInput();
+    p.setLowStockThreshold(threshold);
+    System.out.println("Threshold updated");
   }
+
 }
